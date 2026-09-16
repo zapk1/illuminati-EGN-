@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFFFFF">
     <title>Illuminati EGN — Elite Global Network</title>
+    <meta name="description" content="Join the Illuminati EGN Elite Global Network. Register to become a member of an elite society transforming lives, businesses and careers worldwide.">
+    <meta name="keywords" content="Illuminati EGN, Elite Global Network, join Illuminati, Illuminati registration, Illuminati society, Illuminati member">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Illuminati EGN">
+    <meta property="og:title" content="Illuminati EGN — Elite Global Network">
+    <meta property="og:description" content="Join the Illuminati EGN Elite Global Network. Register to become a member of an elite society transforming lives worldwide.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://media.base44.com/images/public/6a659d04c602b6abc1873c4b/838638c1e_file_000000004b78820881d6f8c83f4056ed1.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Illuminati EGN — Elite Global Network">
+    <meta name="twitter:description" content="Join the Illuminati EGN Elite Global Network. Register to become a member of an elite society transforming lives worldwide.">
+    <meta name="twitter:image" content="https://media.base44.com/images/public/6a659d04c602b6abc1873c4b/838638c1e_file_000000004b78820881d6f8c83f4056ed1.png">
+    <link rel="canonical" href="https://illuminatiegn.beelzeapps.co.za/">
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -78,9 +93,9 @@
 
         <!-- Trust Badges (full square, scrollable vertically) -->
         <div class="flex items-center justify-center gap-3 mb-8 overflow-x-auto scroll-row pb-2">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop" alt="Member 1" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" alt="Member 2" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
-            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop" alt="Member 3" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
+            <img src="https://media.base44.com/images/public/69d3784e5e0463c07235968f/3deb01d8d_instagram_1789545576205.jpg" alt="Member 1" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
+            <img src="https://media.base44.com/images/public/69d3784e5e0463c07235968f/b4dcbd13a_instagram_1789545369666.jpg" alt="Member 2" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
+            <img src="https://media.base44.com/images/public/69d3784e5e0463c07235968f/9b5b3733f_file_00000000d8888211a2f793c39ab4786c.png" alt="Member 3" class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
         </div>
 
         <!-- ===== FEATURED PRODUCT CARD ===== -->
@@ -386,19 +401,10 @@
             document.getElementById('confirmBtn').classList.add('hidden');
             document.getElementById('regLoading').classList.remove('hidden');
 
-            // Save to Firestore in the background
-            try {
-                await addDoc(collection(db, 'illuminati_registrations'), {
-                    fullName, email, phone, workType, business,
-                    wish, why,
-                    amount: '5500.00',
-                    type: 'registration',
-                    status: 'pending_payment',
-                    createdAt: new Date().toISOString()
-                });
-            } catch (e) {
-                console.error('Firestore error:', e);
-            }
+            // Stash details — we only save to Firestore AFTER PayFast confirms payment
+            sessionStorage.setItem('egn_pending_reg', JSON.stringify({
+                fullName, email, phone, workType, business, wish, why
+            }));
 
             // Reveal the pay button
             setTimeout(() => {
@@ -475,16 +481,10 @@
             document.getElementById('custConfirmBtn').classList.add('hidden');
             document.getElementById('custLoading').classList.remove('hidden');
 
-            try {
-                await addDoc(collection(db, 'illuminati_custom_payments'), {
-                    fullName, email, amount, reason,
-                    type: 'custom_payment',
-                    status: 'pending_payment',
-                    createdAt: new Date().toISOString()
-                });
-            } catch (e) {
-                console.error('Firestore error:', e);
-            }
+            // Stash details — we only save to Firestore AFTER PayFast confirms payment
+            sessionStorage.setItem('egn_pending_cust', JSON.stringify({
+                fullName, email, amount, reason
+            }));
 
             setTimeout(() => {
                 document.getElementById('custLoading').classList.add('hidden');
@@ -520,11 +520,35 @@
     document.body.appendChild(b);
 };
 
-        // Check if returning from PayFast
+                // Check if returning from PayFast
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('pf') === 'return') {
+            // Only NOW do we save to Firestore — PayFast confirmed the payment
+            (async () => {
+                try {
+                    const reg = sessionStorage.getItem('egn_pending_reg');
+                    if (reg) {
+                        const d = JSON.parse(reg);
+                        await addDoc(collection(db, 'illuminati_registrations'), {
+                            ...d, amount: '5500.00', type: 'registration',
+                            status: 'paid', paidAt: new Date().toISOString()
+                        });
+                        sessionStorage.removeItem('egn_pending_reg');
+                    }
+                    const cust = sessionStorage.getItem('egn_pending_cust');
+                    if (cust) {
+                        const d = JSON.parse(cust);
+                        await addDoc(collection(db, 'illuminati_custom_payments'), {
+                            ...d, type: 'custom_payment',
+                            status: 'paid', paidAt: new Date().toISOString()
+                        });
+                        sessionStorage.removeItem('egn_pending_cust');
+                    }
+                } catch (e) { console.error('Firestore save on return error:', e); }
+            })();
             document.getElementById('confirmScreen').classList.remove('hidden');
         }
+
     </script>
 
     <script>
