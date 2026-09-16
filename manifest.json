@@ -1,0 +1,24 @@
+{
+  "name": "Illuminati EGN — Elite Global Network",
+  "short_name": "Illuminati EGN",
+  "description": "Join the Illuminati EGN Elite Global Network. Register to become a member of an elite society transforming lives worldwide.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://media.base44.com/images/public/6a659d04c602b6abc1873c4b/838638c1e_file_000000004b78820881d6f8c83f4056ed1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://media.base44.com/images/public/6a659d04c602b6abc1873c4b/838638c1e_file_000000004b78820881d6f8c83f4056ed1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
